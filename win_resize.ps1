@@ -1,4 +1,8 @@
-﻿#====================================================================
+﻿# Left,Top,Right-Left,Bottom-Top
+$OpenList = @(@("C:\Users\aiueo\Desktop\テスト①",175,126,1139,600),
+              @("C:\Users\aiueo\Desktop\テスト②",0,0,100,100))
+
+#====================================================================
 # ウインドウサイズを変更する関数 Resize-Window
 #====================================================================
 Add-Type @"
@@ -26,15 +30,7 @@ public class WinAPI
 "@
 
 
-# function Relocate-Window($wh, $left, $top, $width, $height) {
 function Relocate-Window{
-<#
-    # ウインドウ座標データ構造体
-    # $rc = New-Object RECT
-
-    # ウインドウの現在の座標データを取得
-    # [WinAPI]::GetWindowRect($wh, [ref]$rc) > $null
-#>
     Param(
       $wh,
       $left,
@@ -48,22 +44,22 @@ function Relocate-Window{
 
 
 function Main(){
-  $OpenList = @(@("C:\Users\正太\Desktop",0,0,800,800),@("C:\Users\正太\Downloads",0,0,100,100))
   foreach($opn in $OpenList){
-    $process = Start-Process explorer.exe -ArgumentList $opn[0] -PassThru
-    # $process = Start-Process explorer.exe -PassThru
-    $null = $process.WaitForInputIdle()
-    Start-Sleep -Seconds 5
-    $handle = $process.MainWindowHandle
-    
-    
-    $LatestProcess = Get-Process -Name "Explorer" | Sort-Object Start-Time -Descending | Select-Object -First 1
-    
-    $LatestHandle = $LatestProcess.MainWindowHandle
-    
-    # Relocate-Window $handle $opn[1] $opn[2] $opn[3] $opn[4]
-    
-    Relocate-Window $LatestHandle $opn[1] $opn[2] $opn[3] $opn[4]
+    # エクスプローラで開く
+    # $process = Start-Process explorer.exe -ArgumentList $opn[0] -PassThru
+    Start-Process explorer.exe -ArgumentList $opn[0] -PassThru
+    # 開くまで待つ
+    $null = $process.WaitForInputIdle() # 必要？
+    Start-Sleep -Seconds 3
+    #$handle = $process.MainWindowHandle
+
+    $WindowSearchName = Split-Path -Path $opn[0] -Leaf
+    $SearchHandle = (Get-Process | ?{$_.MainWindowTitle -eq $WindowSearchName } ).MainWindowHandle
+    while($SearchHandle -eq ""){
+      $SearchHandle = (Get-Process | ?{$_.MainWindowTitle -eq $WindowSearchName } ).MainWindowHandle
+      Write-Host $SearchHandle
+    }
+    Relocate-Window $SearchHandle $opn[1] $opn[2] $opn[3] $opn[4]
   }
 }
 
